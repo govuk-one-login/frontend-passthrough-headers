@@ -35,5 +35,9 @@
     "tslib": "2.6.2",
     "typescript": "5.4.5"
   },
-  "types": "./esm/index.d.ts"
+  "types": "./esm/index.d.ts",
+  "dependencies": {
+    "forwarded-parse": "^2.1.2",
+    "pino": "^8.20.0"
+  }
 }

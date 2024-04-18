@@ -25,12 +25,16 @@ Add to your project using `npm i @govuk-one-login/frontend-passthrough-headers`
 import { createPersonalDataHeaders } from "@govuk-one-login/frontend-passthrough-headers";
 
 async function routeHandler(req, res, next) {
+  const url = "https://internal-service.com/do-something";
+
   const headers = {
-    ...createPersonalDataHeaders(req),
+    ...createPersonalDataHeaders(url, req),
   };
-  const res = await axios.get("https://internal-service.com/do-something", {
+
+  const res = await axios.get(url, {
     headers,
   });
+
   return res.data;
 }
 ```

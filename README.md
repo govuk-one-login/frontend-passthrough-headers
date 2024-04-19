@@ -16,6 +16,39 @@ Add to your project using `npm i @govuk-one-login/frontend-passthrough-headers`
 
 ## How to use
 
+### getPersonalDataHeadersMiddleware
+
+If you attach an axios instance to your requests using middleware you can use this middleware to passthrough the headers based on an allowlist.
+
+```javascript
+import axios from "axios";
+import express from "express";
+import { getPersonalDataHeadersMiddleware } from "@govuk-one-login/frontend-passthrough-headers";
+
+const app = express();
+
+app.use((req, _res, next) => {
+  req.axios = axios.create();
+  next();
+});
+
+app.use(
+  getPersonalDataHeadersMiddleware([
+    "https://accounts.gov.uk", // allowlist by specific string
+    `/.*\.gov\.uk/`, // allowlist by regex
+  ])
+);
+
+app.get("/", (req) => {
+  req.axios.post("https://accounts.gov.uk"); // This will pass through the headers
+  req.axios.post("https://accounts.com"); // This will not pass through the headers
+});
+
+app.listen(3000, () => {
+  console.log(`Example app listening on port ${port}`);
+});
+```
+
 ### createPersonalDataHeaders
 
 > [!WARNING]

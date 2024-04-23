@@ -2,8 +2,16 @@ import { type Request } from "express";
 import { logger } from "./utils/logger";
 import { processUserIP } from "./utils/userIP";
 
-const HEADER_TXMA = "txma-audit-encoded";
-const OUTBOUND_FORWARDED_HEADER = "x-forwarded-for";
+
+const HEADERS = {
+  HEADER_TXMA: 'txma-audit-encoded',
+  OUTBOUND_FORWARDED_HEADER: 'x-forwarded-for'
+} as const
+
+interface PersonalDataHeaders {
+  [HEADERS.HEADER_TXMA]?: string | string [],
+  [HEADERS.OUTBOUND_FORWARDED_HEADER]?: string | string []
+}
 
 /**
  * This function extracts request headers that should be passed through
@@ -12,25 +20,25 @@ const OUTBOUND_FORWARDED_HEADER = "x-forwarded-for";
  *
  * @param {string} url - The downstream url this request is being sent on to.
  * @param {object} req - A node HTTP/Express type request.
- * @returns {object}
+ * @returns {PersonalDataHeaders}
  */
-export function createPersonalDataHeaders(url: string, req: Request) {
+export function createPersonalDataHeaders(url: string, req: Request):PersonalDataHeaders {
   const domain = new URL(url).hostname;
-  const personalDataHeaders: { [key: string]: string | string[] } = {};
+  const personalDataHeaders: PersonalDataHeaders = {}
 
-  const txmaAuditEncodedHeader = req.headers[HEADER_TXMA];
+  const txmaAuditEncodedHeader = req.headers[HEADERS.HEADER_TXMA];
   if (txmaAuditEncodedHeader) {
-    personalDataHeaders[HEADER_TXMA] = txmaAuditEncodedHeader;
+    personalDataHeaders[HEADERS.HEADER_TXMA]= txmaAuditEncodedHeader;
     logger.trace(
-      `Personal Data header "${HEADER_TXMA}" is being forwarded to domain "${domain}"`
+      `Personal Data header "${HEADERS.HEADER_TXMA}" is being forwarded to domain "${domain}"`
     );
   }
 
   const userIP = processUserIP(req);
   if (userIP) {
-    personalDataHeaders[OUTBOUND_FORWARDED_HEADER] = userIP;
+    personalDataHeaders[HEADERS.OUTBOUND_FORWARDED_HEADER] = userIP;
     logger.trace(
-      `Personal Data header "${OUTBOUND_FORWARDED_HEADER}" is being forwarded to domain "${domain}"`
+      `Personal Data header "${HEADERS.OUTBOUND_FORWARDED_HEADER}" is being forwarded to domain "${domain}"`
     );
   }
 

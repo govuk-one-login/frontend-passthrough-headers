@@ -1,5 +1,6 @@
 import { type Request } from "express";
 import { createPersonalDataHeaders } from "../../index";
+import { logger } from "../../utils/logger";
 
 const MOCK_CLOUDFRONT_VIEWER_IPV4 = "198.51.100.10:46532";
 const MOCK_CLOUDFRONT_VIEWER_IPV6 = "[2001:db8:cafe::17]:46532";
@@ -11,6 +12,10 @@ const MOCK_X_FORWARDED_FOR_IPV4 = "198.51.100.13, 2004:db8:cafe::17";
 const MOCK_X_FORWARDED_FOR_IPV6 = "2005:db8:cafe::17, 198.51.100.13";
 
 describe("createPersonalDataHeaders", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe("handle txma-audit-encoded header", () => {
     it("should return an object with the txma-audit-encoded header if there is one present", () => {
       const headers = createPersonalDataHeaders("https://account.gov.uk", {
@@ -63,19 +68,20 @@ describe("createPersonalDataHeaders", () => {
         });
       });
 
-      it("should throw an error for an invalid 'cloudfront-viewer-address' header", () => {
-        expect(() => {
-          createPersonalDataHeaders("https://account.gov.uk", {
-            headers: {
-              "cloudfront-viewer-address": "fgfgn4t428fcxcz'][]/.",
-              forwarded: MOCK_FORWARDED_IPV4,
-              "x-forwarded-for": MOCK_X_FORWARDED_FOR_IPV4,
-            },
-            ip: "198.51.100.13",
-          } as unknown as Request);
-        }).toThrow(
+      it("should log a warning and not return the header on an invalid 'cloudfront-viewer-address' header", () => {
+        const spyLogger = jest.spyOn(logger, "warn");
+        const headers = createPersonalDataHeaders("https://account.gov.uk", {
+          headers: {
+            "cloudfront-viewer-address": "fgfgn4t428fcxcz'][]/.",
+            forwarded: MOCK_FORWARDED_IPV4,
+            "x-forwarded-for": MOCK_X_FORWARDED_FOR_IPV4,
+          },
+          ip: "198.51.100.13",
+        } as unknown as Request);
+        expect(spyLogger).toHaveBeenCalledWith(
           'Request received with invalid content in "cloudfront-viewer-address" header.'
         );
+        expect(headers).toEqual({});
       });
     });
 
@@ -108,18 +114,19 @@ describe("createPersonalDataHeaders", () => {
         });
       });
 
-      it("should throw an error for an invalid 'forwarded' header", () => {
-        expect(() => {
-          createPersonalDataHeaders("https://account.gov.uk", {
-            headers: {
-              forwarded: "fgfgn4t428fcxcz'][]/.",
-              "x-forwarded-for": MOCK_X_FORWARDED_FOR_IPV4,
-            },
-            ip: "198.51.100.13",
-          } as unknown as Request);
-        }).toThrow(
+      it("should log a warning and not return a header on an invalid 'forwarded' header", () => {
+        const spyLogger = jest.spyOn(logger, "warn");
+        const headers = createPersonalDataHeaders("https://account.gov.uk", {
+          headers: {
+            forwarded: "fgfgn4t428fcxcz'][]/.",
+            "x-forwarded-for": MOCK_X_FORWARDED_FOR_IPV4,
+          },
+          ip: "198.51.100.13",
+        } as unknown as Request);
+        expect(spyLogger).toHaveBeenCalledWith(
           'Request received with invalid content in "forwarded" header.'
         );
+        expect(headers).toEqual({});
       });
     });
 

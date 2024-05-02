@@ -43,9 +43,10 @@ export function processUserIP(req: Request): string | null {
         const firstIP = getFirstOrOnly(header);
         return parseIP(firstIP);
       } catch (e) {
-        throw new Error(
+        logger.warn(
           `Request received with invalid content in "${HEADER_CLOUDFRONT_VIEWER}" header.`
         );
+        return null;
       }
     }
     case IPSources.Forwarded: {
@@ -56,9 +57,10 @@ export function processUserIP(req: Request): string | null {
         const firstEntry = forwardedParse(header)[0];
         return parseIP(firstEntry.for);
       } catch (e) {
-        throw new Error(
+        logger.warn(
           `Request received with invalid content in "${HEADER_FORWARDED}" header.`
         );
+        return null;
       }
     }
     case IPSources.XForwardedFor: {

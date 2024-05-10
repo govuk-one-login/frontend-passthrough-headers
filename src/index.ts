@@ -8,7 +8,7 @@ const HEADERS = {
   OUTBOUND_FORWARDED_HEADER: 'x-forwarded-for'
 } as const
 
-interface PersonalDataHeaders {
+export interface PersonalDataHeaders {
   [HEADERS.HEADER_TXMA]?: string | string [],
   [HEADERS.OUTBOUND_FORWARDED_HEADER]?: string | string []
 }

@@ -79,7 +79,7 @@ describe("createPersonalDataHeaders", () => {
           ip: "198.51.100.13",
         } as unknown as Request);
         expect(spyLogger).toHaveBeenCalledWith(
-          'Request received with invalid content in "cloudfront-viewer-address" header.'
+          'Request received with invalid content in "cloudfront-viewer-address" header.',
         );
         expect(headers).toEqual({});
       });
@@ -124,7 +124,7 @@ describe("createPersonalDataHeaders", () => {
           ip: "198.51.100.13",
         } as unknown as Request);
         expect(spyLogger).toHaveBeenCalledWith(
-          'Request received with invalid content in "forwarded" header.'
+          'Request received with invalid content in "forwarded" header.',
         );
         expect(headers).toEqual({});
       });
@@ -137,6 +137,23 @@ describe("createPersonalDataHeaders", () => {
             "x-forwarded-for": MOCK_X_FORWARDED_FOR_IPV4,
           },
           ip: "198.51.100.13",
+        } as unknown as Request);
+
+        expect(headers).toEqual({
+          "x-forwarded-for": "198.51.100.13",
+        });
+      });
+
+      it("should fall back to x-forwarded-for and extract an IPv4 from ApiGatewayProxyEvent request", () => {
+        const headers = createPersonalDataHeaders("https://account.gov.uk", {
+          headers: {
+            "x-forwarded-for": MOCK_X_FORWARDED_FOR_IPV4,
+          },
+          requestContext: {
+            identity: {
+              sourceIp: "198.51.100.13",
+            },
+          },
         } as unknown as Request);
 
         expect(headers).toEqual({

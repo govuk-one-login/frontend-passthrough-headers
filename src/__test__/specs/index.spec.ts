@@ -1,6 +1,7 @@
 import { type Request } from "express";
 import { createPersonalDataHeaders } from "../../index";
 import { logger } from "../../utils/logger";
+import { APIGatewayProxyEvent } from "aws-lambda";
 
 const MOCK_CLOUDFRONT_VIEWER_IPV4 = "198.51.100.10:46532";
 const MOCK_CLOUDFRONT_VIEWER_IPV6 = "[2001:db8:cafe::17]:46532";
@@ -154,7 +155,7 @@ describe("createPersonalDataHeaders", () => {
               sourceIp: "198.51.100.13",
             },
           },
-        } as unknown as Request);
+        } as unknown as APIGatewayProxyEvent);
 
         expect(headers).toEqual({
           "x-forwarded-for": "198.51.100.13",

@@ -72,11 +72,22 @@ export function processUserIP(
       }
     }
     case IPSources.XForwardedFor: {
-      logger.trace(`Sourcing User IP from "${HEADER_X_FORWARDED}" header.`);
-      if (isAPIGatewayProxyEvent(req)) {
-        return req.requestContext?.identity?.sourceIp ?? null;
-      } else {
-        return req.ip ?? null;
+      try {
+        logger.trace(`Sourcing User IP from "${HEADER_X_FORWARDED}" header.`);
+        if (isAPIGatewayProxyEvent(req)) {
+          const header = req.headers[HEADER_X_FORWARDED];
+          if (!header) return null;
+          const ip = header.split(",")[0];
+          return ip;
+        } else {
+          console.log("is  not   apigateway");
+          return req.ip ?? null;
+        }
+      } catch (e) {
+        logger.warn(
+          `Request received with invalid content in "${HEADER_X_FORWARDED}" header.`,
+        );
+        return null;
       }
     }
     case IPSources.None:

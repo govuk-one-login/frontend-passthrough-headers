@@ -78,9 +78,8 @@ export function processUserIP(
           const header = req.headers[HEADER_X_FORWARDED];
           if (!header) return null;
           const ip = header.split(",")[0];
-          return ip;
+          return parseIP(ip);
         } else {
-          console.log("is  not   apigateway");
           return req.ip ?? null;
         }
       } catch (e) {

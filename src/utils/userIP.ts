@@ -5,8 +5,11 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { P } from "pino";
 
 const HEADER_CLOUDFRONT_VIEWER = "cloudfront-viewer-address";
+const HEADER_CLOUDFRONT_VIEWER_U = "Cloudfront-Viewer-Address";
 const HEADER_FORWARDED = "forwarded";
+const HEADER_FORWARDED_U = "Forwarded";
 const HEADER_X_FORWARDED = "x-forwarded-for";
+const HEADER_X_FORWARDED_U = "X-Forwarded-For";
 
 enum IPSources {
   Cloudfront,
@@ -29,8 +32,11 @@ function getFirstOrOnly(value: string | string[]) {
 }
 
 function getUserIPSource(req: Request | APIGatewayProxyEvent): IPSources {
+  if (req.headers[HEADER_CLOUDFRONT_VIEWER_U]) return IPSources.Cloudfront;
   if (req.headers[HEADER_CLOUDFRONT_VIEWER]) return IPSources.Cloudfront;
+  if (req.headers[HEADER_FORWARDED_U]) return IPSources.Forwarded;
   if (req.headers[HEADER_FORWARDED]) return IPSources.Forwarded;
+  if (req.headers[HEADER_X_FORWARDED_U]) return IPSources.XForwardedFor;
   if (req.headers[HEADER_X_FORWARDED]) return IPSources.XForwardedFor;
   return IPSources.None;
 }
@@ -46,7 +52,7 @@ export function processUserIP(
         logger.trace(
           `Sourcing User IP from "${HEADER_CLOUDFRONT_VIEWER}" header.`,
         );
-        const header = req.headers[HEADER_CLOUDFRONT_VIEWER];
+        const header = req.headers[HEADER_CLOUDFRONT_VIEWER_U] || req.headers[HEADER_CLOUDFRONT_VIEWER];
         if (!header) return null;
         const firstIP = getFirstOrOnly(header);
         return parseIP(firstIP);
@@ -60,9 +66,10 @@ export function processUserIP(
     case IPSources.Forwarded: {
       try {
         logger.trace(`Sourcing User IP from "${HEADER_FORWARDED}" header.`);
-        const header = req.headers[HEADER_FORWARDED];
+        const header = req.headers[HEADER_FORWARDED_U] || req.headers[HEADER_FORWARDED];
         if (!header) return null;
-        const firstEntry = forwardedParse(header)[0];
+        const firstIP = getFirstOrOnly(header);
+        const firstEntry = forwardedParse(firstIP)[0];
         return parseIP(firstEntry.for);
       } catch (e) {
         logger.warn(
@@ -75,7 +82,7 @@ export function processUserIP(
       try {
         logger.trace(`Sourcing User IP from "${HEADER_X_FORWARDED}" header.`);
         if (isAPIGatewayProxyEvent(req)) {
-          const header = req.headers[HEADER_X_FORWARDED];
+          const header = req.headers[HEADER_X_FORWARDED_U] || req.headers[HEADER_X_FORWARDED];
           if (!header) return null;
           const ip = header.split(",")[0];
           return parseIP(ip);

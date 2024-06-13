@@ -5,7 +5,9 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 
 const HEADERS = {
   HEADER_TXMA: "txma-audit-encoded",
+  HEADER_TXMA_U: "Txma-Audit-Encoded",
   OUTBOUND_FORWARDED_HEADER: "x-forwarded-for",
+  OUTBOUND_FORWARDED_HEADER_U: "X-Forwarded-For",
 } as const;
 
 interface PersonalDataHeaders {
@@ -29,7 +31,7 @@ export function createPersonalDataHeaders(
   const domain = new URL(url).hostname;
   const personalDataHeaders: PersonalDataHeaders = {};
 
-  const txmaAuditEncodedHeader = req.headers[HEADERS.HEADER_TXMA];
+  const txmaAuditEncodedHeader = req.headers[HEADERS.HEADER_TXMA_U] || req.headers[HEADERS.HEADER_TXMA];
   if (txmaAuditEncodedHeader) {
     personalDataHeaders[HEADERS.HEADER_TXMA] = txmaAuditEncodedHeader;
     logger.trace(

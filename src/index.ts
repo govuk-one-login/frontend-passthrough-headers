@@ -2,15 +2,16 @@ import { type Request } from "express";
 import { logger } from "./utils/logger";
 import { processUserIP } from "./utils/userIP";
 import { APIGatewayProxyEvent } from "aws-lambda";
+import { getHeader } from "./utils/getHeader";
 
 const HEADERS = {
   HEADER_TXMA: "txma-audit-encoded",
   OUTBOUND_FORWARDED_HEADER: "x-forwarded-for",
 } as const;
 
-interface PersonalDataHeaders {
-  [HEADERS.HEADER_TXMA]?: string | string[];
-  [HEADERS.OUTBOUND_FORWARDED_HEADER]?: string | string[];
+export interface PersonalDataHeaders {
+  [HEADERS.HEADER_TXMA]?: string;
+  [HEADERS.OUTBOUND_FORWARDED_HEADER]?: string;
 }
 
 /**
@@ -24,16 +25,17 @@ interface PersonalDataHeaders {
  */
 export function createPersonalDataHeaders(
   url: string,
-  req: Request | APIGatewayProxyEvent,
+  req: Request | APIGatewayProxyEvent
 ): PersonalDataHeaders {
   const domain = new URL(url).hostname;
   const personalDataHeaders: PersonalDataHeaders = {};
 
-  const txmaAuditEncodedHeader = req.headers[HEADERS.HEADER_TXMA];
+  const txmaAuditEncodedHeader = getHeader(req, HEADERS.HEADER_TXMA) as string;
+
   if (txmaAuditEncodedHeader) {
     personalDataHeaders[HEADERS.HEADER_TXMA] = txmaAuditEncodedHeader;
     logger.trace(
-      `Personal Data header "${HEADERS.HEADER_TXMA}" is being forwarded to domain "${domain}"`,
+      `Personal Data header "${HEADERS.HEADER_TXMA}" is being forwarded to domain "${domain}"`
     );
   }
 
@@ -41,7 +43,7 @@ export function createPersonalDataHeaders(
   if (userIP) {
     personalDataHeaders[HEADERS.OUTBOUND_FORWARDED_HEADER] = userIP;
     logger.trace(
-      `Personal Data header "${HEADERS.OUTBOUND_FORWARDED_HEADER}" is being forwarded to domain "${domain}"`,
+      `Personal Data header "${HEADERS.OUTBOUND_FORWARDED_HEADER}" is being forwarded to domain "${domain}"`
     );
   }
 

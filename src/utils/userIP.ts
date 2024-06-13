@@ -2,7 +2,7 @@ import { type Request } from "express";
 import forwardedParse from "forwarded-parse";
 import { logger } from "./logger";
 import { APIGatewayProxyEvent } from "aws-lambda";
-import { P } from "pino";
+import { getHeader } from "./getHeader";
 
 const HEADER_CLOUDFRONT_VIEWER = "cloudfront-viewer-address";
 const HEADER_FORWARDED = "forwarded";
@@ -29,14 +29,14 @@ function getFirstOrOnly(value: string | string[]) {
 }
 
 function getUserIPSource(req: Request | APIGatewayProxyEvent): IPSources {
-  if (req.headers[HEADER_CLOUDFRONT_VIEWER]) return IPSources.Cloudfront;
-  if (req.headers[HEADER_FORWARDED]) return IPSources.Forwarded;
-  if (req.headers[HEADER_X_FORWARDED]) return IPSources.XForwardedFor;
+  if (getHeader(req, HEADER_CLOUDFRONT_VIEWER)) return IPSources.Cloudfront;
+  if (getHeader(req, HEADER_FORWARDED)) return IPSources.Forwarded;
+  if (getHeader(req, HEADER_X_FORWARDED)) return IPSources.XForwardedFor;
   return IPSources.None;
 }
 
 export function processUserIP(
-  req: Request | APIGatewayProxyEvent,
+  req: Request | APIGatewayProxyEvent
 ): string | null {
   const userIPSource = getUserIPSource(req);
 
@@ -44,15 +44,15 @@ export function processUserIP(
     case IPSources.Cloudfront: {
       try {
         logger.trace(
-          `Sourcing User IP from "${HEADER_CLOUDFRONT_VIEWER}" header.`,
+          `Sourcing User IP from "${HEADER_CLOUDFRONT_VIEWER}" header.`
         );
-        const header = req.headers[HEADER_CLOUDFRONT_VIEWER];
+        const header = getHeader(req, HEADER_CLOUDFRONT_VIEWER);
         if (!header) return null;
         const firstIP = getFirstOrOnly(header);
         return parseIP(firstIP);
       } catch (e) {
         logger.warn(
-          `Request received with invalid content in "${HEADER_CLOUDFRONT_VIEWER}" header.`,
+          `Request received with invalid content in "${HEADER_CLOUDFRONT_VIEWER}" header.`
         );
         return null;
       }
@@ -60,13 +60,14 @@ export function processUserIP(
     case IPSources.Forwarded: {
       try {
         logger.trace(`Sourcing User IP from "${HEADER_FORWARDED}" header.`);
-        const header = req.headers[HEADER_FORWARDED];
+        const header = getHeader(req, HEADER_FORWARDED);
         if (!header) return null;
-        const firstEntry = forwardedParse(header)[0];
+        const firstIP = getFirstOrOnly(header);
+        const firstEntry = forwardedParse(firstIP)[0];
         return parseIP(firstEntry.for);
       } catch (e) {
         logger.warn(
-          `Request received with invalid content in "${HEADER_FORWARDED}" header.`,
+          `Request received with invalid content in "${HEADER_FORWARDED}" header.`
         );
         return null;
       }
@@ -75,16 +76,17 @@ export function processUserIP(
       try {
         logger.trace(`Sourcing User IP from "${HEADER_X_FORWARDED}" header.`);
         if (isAPIGatewayProxyEvent(req)) {
-          const header = req.headers[HEADER_X_FORWARDED];
+          const header = getHeader(req, HEADER_X_FORWARDED);
           if (!header) return null;
-          const ip = header.split(",")[0];
+          const firstIP = getFirstOrOnly(header);
+          const ip = firstIP.split(",")[0];
           return parseIP(ip);
         } else {
           return req.ip ?? null;
         }
       } catch (e) {
         logger.warn(
-          `Request received with invalid content in "${HEADER_X_FORWARDED}" header.`,
+          `Request received with invalid content in "${HEADER_X_FORWARDED}" header.`
         );
         return null;
       }

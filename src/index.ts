@@ -11,5 +11,6 @@ const logMessage = () => {
 
 export const frontendVitalsInit = (interval: number) => {
   console.log("process env is", process.env.LOG_LEVEL);
+
   setInterval(logMessage, interval);
 };

@@ -1,8 +1,8 @@
-# @govuk-one-login/frontend-vital-signs
+# @govuk-one-login/frontend-passthrough-headers
 
 ## Purpose
 
-@govuk-one-login/frontend-vital-signs is a set of functions to extract pass-through headers that should be passed through our frontends to our backends.
+@govuk-one-login/frontend-passthrough-headers is a set of functions to extract pass-through headers that should be passed through our frontends to our backends.
 
 ## Table of Contents
 
@@ -12,7 +12,7 @@
 
 ## Installation
 
-Add to your project using `npm i @govuk-one-login/frontend-vital-signs`
+Add to your project using `npm i @govuk-one-login/frontend-passthrough-headers`
 
 ## How to use
 
@@ -22,7 +22,7 @@ Add to your project using `npm i @govuk-one-login/frontend-vital-signs`
 > This function extracts headers that contain Personal Data. It must not be passed through to API calls to external services.
 
 ```javascript
-import { createPersonalDataHeaders } from "@govuk-one-login/frontend-vital-signs";
+import { createPersonalDataHeaders } from "@govuk-one-login/frontend-passthrough-headers";
 
 async function routeHandler(req, res, next) {
   const url = "https://internal-service.com/do-something";
@@ -41,4 +41,4 @@ async function routeHandler(req, res, next) {
 
 ## Issues
 
-Please raise any issues on the [GitHub repo](https://github.com/govuk-one-login/frontend-vital-signs).
+Please raise any issues on the [GitHub repo](https://github.com/govuk-one-login/frontend-passthrough-headers).

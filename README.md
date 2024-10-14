@@ -1,3 +1,5 @@
+> ⚠️ **This repository has been archived.** The code for this testing app has been moved to the monorepo so that it's alongside the packages it is designed to test: [https://github.com/govuk-one-login/govuk-one-login-frontend/tree/main/packages/frontend-passthrough-headers](https://github.com/govuk-one-login/govuk-one-login-frontend/tree/main/packages/frontend-passthrough-headers).
+
 # @govuk-one-login/frontend-passthrough-headers
 
 ## Purpose
